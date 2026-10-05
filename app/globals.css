@@ -1,26 +1,203 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ------------------------------------------------------------------
+   Design tokens — Winter Steel. Source of truth: CLAUDE.md
+   The default Tailwind palette is cleared so only these colors exist.
+   ------------------------------------------------------------------ */
+@theme {
+  --color-*: initial;
+  --color-void: #0e1216;
+  --color-iron: #1c232a;
+  --color-slate: #2a333b;
+  --color-steel: #8a9ba8;
+  --color-mist: #c9d1d6;
+  --color-snow: #e6e9eb;
+  --color-ember: #cc5c30;
+  --color-ember-hover: #d96a3d;
+  --color-brass: #b08d57;
+  --color-parchment: #d8cbb0;
+
+  /* Motion. ease-out overrides Tailwind's default so `ease-out` is expo. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1); /* power3.inOut */
+  --duration-micro: 0.3s;
+  --duration-fade: 0.4s; /* reduced-motion fades */
+  --duration-base: 0.8s;
+  --duration-reveal: 1.2s;
+  --duration-cinematic: 1.8s;
+
+  --tracking-label: 0.12em;
+
+  /* Layout */
+  --container-site: 1440px;
+  --gutter: clamp(1.25rem, 4vw, 4rem);
+  --section-y: clamp(6rem, 12vw, 12rem);
+
+  --grain-opacity: 0.06;
 }
 
+/* Fonts come from next/font CSS variables set on <html>. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-cinzel);
+  --font-sans: var(--font-inter-tight);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ------------------------------------------------------------------
+   Type scale
+   ------------------------------------------------------------------ */
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(3.5rem, 10vw, 10rem);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+}
+@utility h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.5rem, 6vw, 5.5rem);
+  line-height: 1;
+  letter-spacing: 0.03em;
+}
+@utility h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+}
+@utility h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+}
+@utility body-lg {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+@utility body {
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+@utility small {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+@utility label {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+/* Numbers, units, dates and code values. Never uppercased. */
+@utility mono {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: var(--tracking-label);
+}
+
+/* ------------------------------------------------------------------
+   Layout helpers
+   ------------------------------------------------------------------ */
+@utility container-site {
+  width: 100%;
+  max-width: var(--container-site);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+@utility section-y {
+  padding-block: var(--section-y);
+}
+
+/* ------------------------------------------------------------------
+   Base
+   ------------------------------------------------------------------ */
+@layer base {
+  html {
+    color-scheme: dark;
+    background-color: var(--color-void);
+  }
+  body {
+    background-color: var(--color-void);
+    color: var(--color-mist);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-snow);
+  }
+  ::selection {
+    background-color: var(--color-slate);
+    color: var(--color-snow);
+  }
+  :focus-visible {
+    outline: 1px solid var(--color-ember);
+    outline-offset: 4px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ------------------------------------------------------------------
+   No flash on load: anything that animates in starts hidden before first
+   paint and GSAP reveals it with autoAlpha. Reduced motion shows it
+   immediately; the <noscript> style in layout.tsx covers JS disabled.
+   ------------------------------------------------------------------ */
+[data-reveal] {
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    visibility: visible;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Film grain — rasterised once as a background, shifted with transform
+   ------------------------------------------------------------------ */
+.grain {
+  position: fixed;
+  inset: -50%;
+  z-index: 100;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  will-change: transform;
+  animation: grain-shift 0.8s steps(1) infinite;
+}
+
+@keyframes grain-shift {
+  0% { transform: translate3d(0, 0, 0); }
+  12% { transform: translate3d(-3%, 2%, 0); }
+  25% { transform: translate3d(2%, -4%, 0); }
+  37% { transform: translate3d(-5%, -1%, 0); }
+  50% { transform: translate3d(4%, 3%, 0); }
+  62% { transform: translate3d(-1%, 5%, 0); }
+  75% { transform: translate3d(3%, -2%, 0); }
+  87% { transform: translate3d(-4%, 4%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grain {
+    animation: none;
+  }
 }
