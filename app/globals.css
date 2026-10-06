@@ -259,3 +259,38 @@ html.has-custom-cursor,
 html.has-custom-cursor * {
   cursor: none !important;
 }
+
+/* ------------------------------------------------------------------
+   Preloader. Server-rendered over everything (under grain and cursor),
+   so the page never shows before it. <html data-preloader> is absent
+   while it runs, "skip" when it never runs (set by the head script in
+   layout.tsx on repeat visits) and "done" once it has finished.
+   Reduced motion and JS disabled never see it.
+   ------------------------------------------------------------------ */
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 97;
+  overflow: hidden;
+}
+
+html[data-preloader] .preloader {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preloader {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Locked before any JS runs; Lenis is stopped as well once it mounts. */
+  html:not([data-preloader]) {
+    overflow: hidden;
+  }
+  /* The preloader's name becomes the hero title; until then the real one waits, invisible but laid out. */
+  html:not([data-preloader]) [data-flip-id="hero-name"] {
+    visibility: hidden;
+  }
+}

@@ -4,7 +4,9 @@ import { Cursor } from "@/components/foundation/Cursor";
 import { Nav } from "@/components/foundation/Nav";
 import { SmoothScroll } from "@/components/foundation/SmoothScroll";
 import { TransitionProvider } from "@/components/foundation/TransitionProvider";
+import { Preloader } from "@/components/sections/preloader/Preloader";
 import { Grain } from "@/components/ui/Grain";
+import { preloaderHeadScript } from "@/lib/preloader";
 import "./globals.css";
 
 const cinzel = Cinzel({
@@ -38,10 +40,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${cinzel.variable} ${interTight.variable} ${jetbrainsMono.variable}`}
+      // The head script sets data-preloader before React hydrates.
+      suppressHydrationWarning
     >
       <head>
-        {/* JS disabled: show [data-reveal] content that GSAP would otherwise reveal. */}
-        <noscript dangerouslySetInnerHTML={{ __html: "<style>[data-reveal]{visibility:visible}</style>" }} />
+        {/* Repeat visit this session: mark the preloader skipped before first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: preloaderHeadScript }} />
+        {/* JS disabled: show [data-reveal] content that GSAP would otherwise reveal, and never show the preloader. */}
+        <noscript
+          dangerouslySetInnerHTML={{
+            __html:
+              "<style>[data-reveal],[data-flip-id]{visibility:visible!important}.preloader{display:none}html{overflow:auto!important}</style>",
+          }}
+        />
       </head>
       <body className="min-h-dvh">
         {/* First focusable element on every page. */}
@@ -53,12 +64,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </a>
         <SmoothScroll>
           <TransitionProvider>
-            <Nav />
-            {/* Skip-link target; inert while the menu is open; the outgoing page during a transition. */}
-            <div id="content" tabIndex={-1} className="outline-none">
-              {children}
+            {/* Inert while the preloader runs. No box of its own. */}
+            <div data-site className="contents">
+              <Nav />
+              {/* Skip-link target; inert while the menu is open; the outgoing page during a transition. */}
+              <div id="content" tabIndex={-1} className="outline-none">
+                {children}
+              </div>
             </div>
           </TransitionProvider>
+          <Preloader />
         </SmoothScroll>
         <Grain />
         <Cursor />

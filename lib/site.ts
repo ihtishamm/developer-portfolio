@@ -13,3 +13,20 @@ export const socialLinks = [
   { label: "LinkedIn", href: "https://linkedin.com/in/ihtishamhassan", external: true },
   { label: "Email", href: "mailto:ahtishamhassan167@gmail.com", external: false },
 ] as const;
+
+// The preloader's foes: they charge out of the fog and are cut down by a single slash.
+export const ENEMIES = ["deadlines", "legacy code", "production bugs", "scope creep"] as const;
+
+// The horde that charges past before ENEMIES arrive (waves 1 and 2). Mobile uses the first four.
+export const ENEMY_HORDE = [
+  "flaky tests",
+  "merge conflicts",
+  "tech debt",
+  "memory leaks",
+  "race conditions",
+  "breaking changes",
+  "vague specs",
+  "cache invalidation",
+  "timezones",
+  "off-by-one",
+] as const;

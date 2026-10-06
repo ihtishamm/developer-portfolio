@@ -137,10 +137,24 @@ SmoothScroll, Cursor and Magnetic run only on `(pointer: fine) and (prefers-redu
 - Skip link: "Skip to content" is the first focusable element in the root layout and targets `#content`, the wrapper around every page.
 - /playground is the test bench for these (noindex).
 
+## Preloader ("The Lone Stand", components/sections/preloader/)
+- Server-rendered in the root layout as a fixed void layer (z 97: above nav and curtain, below grain, cursor and the skip link), so the page never paints before it. Every timing, scale, opacity and distance lives in `preloader` in lib/motion.ts; assets in public/images/preloader/. Words: `ENEMIES` (the final wave, cut by the slash) and `ENEMY_HORDE` (waves 1 and 2) in lib/site.ts.
+- Layering: the name layer sits above everything, outside the lifting panel. Sword, words, slash and front fog are always fully gone before the name starts rising; nothing overlaps it.
+- Scene: one camera wrapper (`data-camera`) holds the key art and its figure version (desktop art at every size, top-anchored at 144.6% of the camera's height so the lone figure stands in the lower third; static brightness filter, never animated), fog, horde, sword, ENEMIES and the snow/ash canvas. It pushes in linearly, shakes during the charge and takes one jolt at the cut. It overscans the screen (115%), so no motion ever reveals an edge. Vignette, flash and the slash stroke are screen-space, outside it. Fog layers are screen-blended bands with a vertical mask fade. The curtain cap is scaleY 0 from the first paint until the exit.
+- Framing: at full draw the whole sword is in frame, pommel at `pommelAt` (9%, so at least 6% after the push-in). The sword travels `drawShare` of the blade's length left, the sheath the rest right. The counter (mono 14px, snow at 0.8) rides just below the pommel.
+- Sequence: light line (gone before the sword appears), sword fades in and is drawn with real loading, glint streak, three-wave charge in perspective from the vanishing point (the key art's horizon glow) with building shake, ENEMIES tremble and stop two left and two right, clear of each other and the sword, stillness, then the slash in real time: the sword whips along the cut pivoting on its tip and is out of frame when the 0.18s whip ends, three ghost copies trail it, the tapered stroke trails the tip, flash and camera jolt. Each word is clipped along the real cut line (or a parallel line through its centre if the cut misses it) and split in slow motion on a separate timeline that only the halves and the particles use. Calm: the lone figure fades in and the name rises above him (centred at ~35% height, nothing within 10% of the top) with a brass rule and a mist label. Exit (fog parts, curtain-cap lift, Flip) is unchanged until the hero is redesigned.
+- Snow and ash (particles.ts): one canvas, three snow depths plus sparse brass ash, half the count on mobile. During the charge they rush from the vanishing point and stretch along their travel (at most 3x their size, same colours); frozen at the stop, slowed in the slow motion; skips frames while the tab is hidden.
+- Once per session. sessionStorage `lone-stand-seen` is set when it finishes or is skipped. An inline script in `<head>` (lib/preloader.ts) sets `<html data-preloader="skip">` before first paint on repeat visits, and CSS hides it. `data-preloader` is absent while it runs, "skip" when it never runs, "done" when finished.
+- Reduced motion: hidden by CSS, never runs, no scroll lock. JS disabled: hidden by the noscript style.
+- While running: scroll locked (CSS from first paint, then Lenis stopped), `[data-site]` (nav + `#content`) inert, cursor live. Skip button and Esc jump straight to the exit.
+- Flip handoff: the preloader's name flies onto the hero title with GSAP Flip.fit, one word at a time. The hero title must carry `data-flip-id="hero-name"` with one `data-flip-word` span per word ("IHTISHAM", "HASSAN"), same `display` style. CSS keeps it `visibility: hidden` (still laid out) until the preloader is done, then it replaces the flown name in place. With no target on screen (another page, or loaded mid-page), the name fades instead.
+- Anything that animates in on first load (the hero entrance) waits for it: `whenPreloaderDone(cb)` from lib/preloader.ts (immediate when it isn't running; otherwise on the `lone-stand:done` event).
+
 ## Texture and atmosphere
 - Film grain: fixed full-screen SVG feTurbulence overlay, opacity 0.06, pointer-events none, subtle animated shift.
 - Fog: only in preloader and hero. Layered PNGs drifting slowly, plus parallax.
 - No gradients except fog fades. No drop shadows. No glow effects.
+- Exceptions, preloader only: a soft dark vignette (radial, transparent centre to void) over the key art, and the sword's glint (a narrow snow band masked to the blade's shape, one pass at 100).
 
 ## Sections (build order)
 1. Foundation: layout, Lenis, grain, cursor, nav, page transition shell
