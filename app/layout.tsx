@@ -3,6 +3,7 @@ import { Cinzel, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { Cursor } from "@/components/foundation/Cursor";
 import { Nav } from "@/components/foundation/Nav";
 import { SmoothScroll } from "@/components/foundation/SmoothScroll";
+import { TransitionProvider } from "@/components/foundation/TransitionProvider";
 import { Grain } from "@/components/ui/Grain";
 import "./globals.css";
 
@@ -51,11 +52,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         <SmoothScroll>
-          <Nav />
-          {/* Skip-link target; made inert while the menu is open. */}
-          <div id="content" tabIndex={-1} className="outline-none">
-            {children}
-          </div>
+          <TransitionProvider>
+            <Nav />
+            {/* Skip-link target; inert while the menu is open; the outgoing page during a transition. */}
+            <div id="content" tabIndex={-1} className="outline-none">
+              {children}
+            </div>
+          </TransitionProvider>
         </SmoothScroll>
         <Grain />
         <Cursor />

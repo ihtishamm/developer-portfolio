@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, type MouseEvent, type RefObject } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { duration, ease, reducedMotionQuery, stagger } from "@/lib/motion";
 import { navLinks, socialLinks } from "@/lib/site";
 import { TextLink } from "@/components/ui/TextLink";
+import type { ChapterCard } from "@/components/foundation/Curtain";
+import { TransitionLink } from "@/components/foundation/TransitionLink";
 
 const CIRCLE_DURATION = 1; // s, clip-path circle grow and collapse
 const LINK_IN_AT = 0.45; // s into the open timeline
@@ -21,7 +22,7 @@ type MenuProps = {
   panelRef: RefObject<HTMLElement | null>;
   /** The menu button: the circle grows out of and collapses back into its centre. */
   originRef: RefObject<HTMLElement | null>;
-  onNavigate: (href: string) => void;
+  onNavigate: (href: string, card?: ChapterCard) => void;
   /** Called once the close animation has finished. */
   onClosed: () => void;
 };
@@ -109,10 +110,10 @@ export function Menu({ open, panelRef, originRef, onNavigate, onClosed }: MenuPr
     { dependencies: [open], scope: panelRef },
   );
 
-  const handleClick = (e: MouseEvent<HTMLAnchorElement>, href: string) => {
+  const handleClick = (e: MouseEvent<HTMLAnchorElement>, href: string, card?: ChapterCard) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // let new-tab clicks through
-    e.preventDefault();
-    onNavigate(href);
+    e.preventDefault(); // TransitionLink stands down; Nav navigates once the menu has closed
+    onNavigate(href, card);
   };
 
   return (
@@ -125,14 +126,14 @@ export function Menu({ open, panelRef, originRef, onNavigate, onClosed }: MenuPr
     >
       <div className="container-site flex min-h-dvh flex-col justify-between gap-12">
         <div className="flex h-24 shrink-0 items-center">
-          <Link
+          <TransitionLink
             href="/"
             data-menu-fade
             onClick={(e) => handleClick(e, "/")}
             className="font-display text-sm tracking-label text-snow"
           >
             IHTISHAM HASSAN
-          </Link>
+          </TransitionLink>
         </div>
 
         <ul className="menu-list flex flex-col gap-2 md:gap-4">
@@ -144,9 +145,9 @@ export function Menu({ open, panelRef, originRef, onNavigate, onClosed }: MenuPr
                   <span aria-hidden="true" className="mono pt-[0.5em] text-brass">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <Link
+                  <TransitionLink
                     href={link.href}
-                    onClick={(e) => handleClick(e, link.href)}
+                    onClick={(e) => handleClick(e, link.href, { chapter: link.chapter, title: link.title })}
                     className="group/link h1 flex items-center gap-4 text-snow md:gap-6"
                   >
                     {link.label}
@@ -154,7 +155,7 @@ export function Menu({ open, panelRef, originRef, onNavigate, onClosed }: MenuPr
                       aria-hidden="true"
                       className="size-[7px] shrink-0 scale-0 rounded-full bg-ember opacity-0 transition-[scale,opacity] duration-(--duration-micro) ease-out group-hover/link:scale-100 group-hover/link:opacity-100 group-focus-visible/link:scale-100 group-focus-visible/link:opacity-100 motion-reduce:scale-100"
                     />
-                  </Link>
+                  </TransitionLink>
                 </div>
               </div>
             </li>

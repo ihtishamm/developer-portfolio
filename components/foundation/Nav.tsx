@@ -1,14 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { duration, ease, reducedMotionQuery } from "@/lib/motion";
 import { navLinks } from "@/lib/site";
 import { Magnetic } from "@/components/foundation/Magnetic";
+import type { ChapterCard } from "@/components/foundation/Curtain";
 import { Menu } from "@/components/foundation/Menu";
 import { useSmoothScroll } from "@/components/foundation/SmoothScroll";
+import { TransitionLink } from "@/components/foundation/TransitionLink";
+import { usePageTransition } from "@/components/foundation/TransitionProvider";
 import { TextLink } from "@/components/ui/TextLink";
 
 const desktopQuery = "(min-width: 768px)";
@@ -29,39 +30,22 @@ export function Nav() {
   const lineTop = useRef<HTMLSpanElement>(null);
   const lineBottom = useRef<HTMLSpanElement>(null);
   const panel = useRef<HTMLElement>(null);
-  const pendingHref = useRef<string | null>(null);
-  const { stop, start, scrollTo } = useSmoothScroll();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  // Same-page hashes (and home on home) scroll smoothly; anything else is a route change.
-  const navigate = useCallback(
-    (href: string) => {
-      const [path, hash] = href.split("#");
-      if (path === pathname) scrollTo(hash ? `#${hash}` : 0);
-      else router.push(href);
-    },
-    [pathname, router, scrollTo],
-  );
-
-  const onBarLinkClick = (e: MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-    e.preventDefault();
-    navigate(href);
-  };
+  const pending = useRef<{ href: string; card?: ChapterCard } | null>(null);
+  const { stop, start } = useSmoothScroll();
+  const { navigate } = usePageTransition();
 
   // Menu links: close first, navigate once the close animation is done (see onClosed).
-  const onMenuNavigate = useCallback((href: string) => {
-    pendingHref.current = href;
+  const onMenuNavigate = useCallback((href: string, card?: ChapterCard) => {
+    pending.current = { href, card };
     setOpen(false);
   }, []);
 
   const onClosed = useCallback(() => {
     start();
     button.current?.focus({ preventScroll: true });
-    const href = pendingHref.current;
-    pendingHref.current = null;
-    if (href) navigate(href);
+    const target = pending.current;
+    pending.current = null;
+    if (target) navigate(target.href, target.card);
   }, [navigate, start]);
 
   // Desktop: swap the bar for the menu button past one viewport height. Reverses on the way back up.
@@ -85,14 +69,15 @@ export function Nav() {
             .fromTo(toggle.current, { autoAlpha: 0, scale: 0 }, { autoAlpha: 1, scale: 1, ...enter }, BUTTON_IN_AT);
         }
 
-        const trigger = ScrollTrigger.create({
+        ScrollTrigger.create({
           start: () => window.innerHeight,
-          end: "max",
+          // Keep end past start, so a page shorter than two viewports never reads as "scrolled past".
+          end: () => Math.max(ScrollTrigger.maxScroll(window), window.innerHeight) + 1,
           onEnter: () => swap.play(),
           onLeaveBack: () => swap.reverse(),
         });
         // Loaded or restored mid-page: start in the scrolled state without animating.
-        if (trigger.progress > 0) swap.progress(1);
+        if (window.scrollY >= window.innerHeight) swap.progress(1);
       });
       return () => mm.revert();
     },
@@ -153,18 +138,14 @@ export function Nav() {
     <>
       <header className="pointer-events-none fixed inset-x-0 top-0 z-70">
         <div ref={bar} className="container-site pointer-events-auto hidden h-24 items-center justify-between md:flex">
-          <Link
-            href="/"
-            onClick={(e) => onBarLinkClick(e, "/")}
-            className="font-display text-sm tracking-label text-snow"
-          >
+          <TransitionLink href="/" className="font-display text-sm tracking-label text-snow">
             IHTISHAM HASSAN
-          </Link>
+          </TransitionLink>
           <nav aria-label="Primary">
             <ul className="flex items-center gap-10">
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <TextLink href={link.href} onClick={(e) => onBarLinkClick(e, link.href)} className="label">
+                  <TextLink href={link.href} chapter={link.chapter} title={link.title} className="label">
                     {link.label}
                   </TextLink>
                 </li>

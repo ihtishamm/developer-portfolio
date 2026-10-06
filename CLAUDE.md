@@ -26,6 +26,8 @@ Theme is atmosphere only (20%). The work and the person are the story (80%).
 - Register plugins once in a shared lib/gsap.ts file.
 - Animate transform and opacity only. Never animate width, height, top, left or filter on scroll.
 - clip-path is allowed for reveals and masks (e.g. the menu's circle wipe).
+- Never animate border-radius. Curved edges are always separate cap elements (ellipses, border-radius 50%, static) animated with scaleY/scaleX only.
+- Every internal link uses TransitionLink (components/foundation/TransitionLink.tsx), directly or through TextLink. Never import next/link elsewhere.
 - No magic numbers for colors, fonts, easing or durations. Use the tokens below.
 - Keep components small: one section = one folder in components/sections/.
 
@@ -122,6 +124,16 @@ SmoothScroll, Cursor and Magnetic run only on `(pointer: fine) and (prefers-redu
   - Top bar (desktop): wordmark left (links home), Journey / Battles / Armory / Raven as label TextLinks right. Past one viewport height it slides up and fades out and a 52px round iron menu button (0.5px slate border, Magnetic) scales in top right; reverses at the top. Below 768px only the menu button shows, always.
   - Menu: fixed fullscreen iron overlay, opened by a clip-path circle from the button's centre. Wordmark top left (links home), h1 Cinzel links with brass mono indexes, mono social links at the bottom. Hovering a link dims the others, nudges it right and shows an ember dot. Hamburger morphs into an X.
   - While open: Lenis stopped, `#content` inert, focus trapped, Esc closes, focus returns to the button. Link clicks close first, then scroll or navigate.
+- **TransitionProvider + TransitionLink + Curtain**: page transitions, mounted once in the root layout around Nav and `#content`.
+  ```tsx
+  <TransitionLink href="/work/x" chapter="Chapter 01" title="Ledger of the North">…</TransitionLink>
+  const { navigate } = usePageTransition(); // same-page targets scroll, other routes play the curtain
+  usePageEntrance(() => { /* page entrance timeline */ }, scopeRef); // first load, or 0.6s before the curtain clears
+  ```
+  - Sequence: curtain in (slate then iron, outgoing page drops back and fades), router.push, wait for the pathname, scroll reset to top under the curtain, chapter card hold, curtain out, new page entrance overlaps the last 0.6s.
+  - chapter/title are optional; without them (and on back/forward) there's no card, and the curtain holds fully covered for 0.3s instead so in and out read as one transition. First load has no curtain. Reduced motion: 0.4s opacity fade.
+  - Nav links (lib/site.ts) carry their own card ("Part 01" / "The Journey" etc.), used when they leave the current page; same-page clicks just scroll.
+  - Every page with an entrance runs it through `usePageEntrance` so it waits for the curtain.
 - Skip link: "Skip to content" is the first focusable element in the root layout and targets `#content`, the wrapper around every page.
 - /playground is the test bench for these (noindex).
 

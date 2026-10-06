@@ -34,6 +34,8 @@
   --section-y: clamp(6rem, 12vw, 12rem);
 
   --grain-opacity: 0.06;
+  /* Curtain caps. Half the height sticks out past the layer edge; 110% travel must clear it. */
+  --curtain-cap-height: 20vh;
 }
 
 /* Fonts come from next/font CSS variables set on <html>. */
@@ -223,6 +225,20 @@
    ------------------------------------------------------------------ */
 .menu-list:has(a:hover, a:focus-visible) .menu-item:not(:has(a:hover, a:focus-visible)) {
   opacity: 0.3;
+}
+
+/* ------------------------------------------------------------------
+   Page transition curtain caps: ellipses centred on a layer's top or bottom
+   edge. Curves come from these being scaled (scaleY), never from animating
+   border-radius.
+   ------------------------------------------------------------------ */
+.curtain-cap {
+  position: absolute;
+  left: -15vw;
+  width: 130vw;
+  height: var(--curtain-cap-height);
+  margin-top: calc(var(--curtain-cap-height) / -2);
+  border-radius: 50%;
 }
 
 /* ------------------------------------------------------------------
