@@ -129,6 +129,22 @@
   html {
     color-scheme: dark;
     background-color: var(--color-void);
+    /* Stopping scroll (menu open) hides overflow; keep the gutter so nothing shifts. */
+    scrollbar-gutter: stable;
+    scrollbar-color: var(--color-slate) var(--color-void);
+    scrollbar-width: thin;
+  }
+  /* Older WebKit/Blink without scrollbar-color. */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background-color: var(--color-void);
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-slate);
+    border-radius: 9999px;
   }
   body {
     background-color: var(--color-void);
@@ -200,4 +216,30 @@
   .grain {
     animation: none;
   }
+}
+
+/* ------------------------------------------------------------------
+   Fullscreen menu: hovering or focusing one link dims the others.
+   ------------------------------------------------------------------ */
+.menu-list:has(a:hover, a:focus-visible) .menu-item:not(:has(a:hover, a:focus-visible)) {
+  opacity: 0.3;
+}
+
+/* ------------------------------------------------------------------
+   Custom cursor — only on fine pointers with motion allowed. The native
+   cursor is hidden by a class Cursor.tsx sets, so it returns without JS.
+   ------------------------------------------------------------------ */
+.cursor {
+  display: none;
+}
+
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .cursor {
+    display: block;
+  }
+}
+
+html.has-custom-cursor,
+html.has-custom-cursor * {
+  cursor: none !important;
 }

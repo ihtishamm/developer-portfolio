@@ -21,3 +21,6 @@ export const stagger = {
 
 export const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
 export const fullMotionQuery = "(prefers-reduced-motion: no-preference)";
+
+// Fine pointer with motion allowed: smooth scroll, custom cursor and magnetic effects only run here.
+export const finePointerMotionQuery = "(pointer: fine) and (prefers-reduced-motion: no-preference)";

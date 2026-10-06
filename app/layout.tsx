@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Cinzel, Inter_Tight, JetBrains_Mono } from "next/font/google";
+import { Cursor } from "@/components/foundation/Cursor";
+import { Nav } from "@/components/foundation/Nav";
+import { SmoothScroll } from "@/components/foundation/SmoothScroll";
 import { Grain } from "@/components/ui/Grain";
 import "./globals.css";
 
@@ -40,8 +43,22 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <noscript dangerouslySetInnerHTML={{ __html: "<style>[data-reveal]{visibility:visible}</style>" }} />
       </head>
       <body className="min-h-dvh">
-        {children}
+        {/* First focusable element on every page. */}
+        <a
+          href="#content"
+          className="small fixed top-4 left-4 z-120 -translate-y-[200%] bg-ember px-5 py-3 font-medium text-void focus:translate-y-0"
+        >
+          Skip to content
+        </a>
+        <SmoothScroll>
+          <Nav />
+          {/* Skip-link target; made inert while the menu is open. */}
+          <div id="content" tabIndex={-1} className="outline-none">
+            {children}
+          </div>
+        </SmoothScroll>
         <Grain />
+        <Cursor />
       </body>
     </html>
   );

@@ -25,6 +25,7 @@ Theme is atmosphere only (20%). The work and the person are the story (80%).
 - Every GSAP animation lives inside useGSAP with a scope ref, so cleanup is automatic.
 - Register plugins once in a shared lib/gsap.ts file.
 - Animate transform and opacity only. Never animate width, height, top, left or filter on scroll.
+- clip-path is allowed for reveals and masks (e.g. the menu's circle wipe).
 - No magic numbers for colors, fonts, easing or durations. Use the tokens below.
 - Keep components small: one section = one folder in components/sections/.
 
@@ -51,6 +52,7 @@ Rules:
 
 ## Typography
 - Display: Cinzel (400, 500). Headings only. Never below 18px. Never for body text or buttons.
+- Wordmark exception: the site name ("IHTISHAM HASSAN") may use Cinzel at 14px minimum, uppercase, tracking 0.12em. The 18px minimum applies everywhere else.
 - Body: Inter Tight (400, 500). All paragraphs, nav, buttons, UI.
 - Mono: JetBrains Mono (400). Labels, dates, metadata, counters.
 
@@ -96,6 +98,32 @@ Rules:
 - No flash on load: every element that animates in gets the data-reveal attribute (visibility: hidden in CSS before first paint). GSAP reveals it with autoAlpha. Under prefers-reduced-motion or with JS disabled (noscript style in the root layout), data-reveal elements are visible immediately.
 - Lenis: lerp 0.08, smoothWheel true. Disable on touch devices.
 - Reduced motion: no preloader, no parallax, no scrub, no smooth scroll. data-reveal content is shown immediately; user-triggered changes may use a simple 0.4s opacity fade only.
+
+## Foundation components (components/foundation/)
+SmoothScroll, Cursor and Magnetic run only on `(pointer: fine) and (prefers-reduced-motion: no-preference)` (`finePointerMotionQuery` in lib/motion.ts). Elsewhere: native scroll, native cursor, no magnetic pull.
+
+- **SmoothScroll**: wraps the app in the root layout. One global Lenis, driven by gsap.ticker and synced to ScrollTrigger. Never create another Lenis. Use the hook from client components:
+  ```tsx
+  const { stop, start, scrollTo } = useSmoothScroll();
+  scrollTo("#contact", { offset: -80 }); // number | selector | element; falls back to native scroll
+  ```
+- **Cursor**: mounted once in the root layout. Never mount it again. Set the state with a data attribute on any element (the nearest ancestor wins):
+  | Attribute | Effect |
+  |-----------|--------|
+  | (none) | Ember dot + steel ring with velocity stretch and brass sparks |
+  | `data-cursor="view"` | Ring grows to 88px, fills ember, shows "VIEW"; dot hides. Use on project rows and cards. |
+  | `data-cursor="hide"` | Ring and dot fade out. Set automatically by Magnetic. |
+  Sparks are toggled by `SPARKS_ENABLED` in Cursor.tsx.
+- **Magnetic**: pulls its child toward the pointer (outer and inner layers) and sets `data-cursor="hide"`. The primary `Button` is already magnetic, so don't wrap it again. Use `wrapperClassName` on Button for layout classes (self-alignment, margins, grid placement), since they belong on the wrapper.
+  ```tsx
+  <Magnetic className="self-start"><a href="…">…</a></Magnetic>
+  ```
+- **Nav + Menu**: mounted once in the root layout (inside SmoothScroll). Links live in lib/site.ts.
+  - Top bar (desktop): wordmark left (links home), Journey / Battles / Armory / Raven as label TextLinks right. Past one viewport height it slides up and fades out and a 52px round iron menu button (0.5px slate border, Magnetic) scales in top right; reverses at the top. Below 768px only the menu button shows, always.
+  - Menu: fixed fullscreen iron overlay, opened by a clip-path circle from the button's centre. Wordmark top left (links home), h1 Cinzel links with brass mono indexes, mono social links at the bottom. Hovering a link dims the others, nudges it right and shows an ember dot. Hamburger morphs into an X.
+  - While open: Lenis stopped, `#content` inert, focus trapped, Esc closes, focus returns to the button. Link clicks close first, then scroll or navigate.
+- Skip link: "Skip to content" is the first focusable element in the root layout and targets `#content`, the wrapper around every page.
+- /playground is the test bench for these (noindex).
 
 ## Texture and atmosphere
 - Film grain: fixed full-screen SVG feTurbulence overlay, opacity 0.06, pointer-events none, subtle animated shift.
